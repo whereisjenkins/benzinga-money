@@ -8,9 +8,9 @@
       "./scripts/customizer.js"
     ]
   },
-  "publicPath": "/wp-content/themes/sage",
-  "devUrl": "http://localhost/benzinga-money",
-  "proxyUrl": "http://localhost/benzinga-money",
+  "publicPath": "/app/themes/sage",
+  "devUrl": "http://localhost/benzinga-test",
+  "proxyUrl": "http://localhost/benzinga-test",
   "cacheBusting": "[name]_[hash:8]",
   "watch": [
     "app/**/*.php",
