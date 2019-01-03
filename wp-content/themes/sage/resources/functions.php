@@ -23,8 +23,8 @@ $sage_error = function ($message, $subtitle = '', $title = '') {
 /**
  * Ensure compatible version of PHP is used
  */
-if (version_compare('7', phpversion(), '>=')) {
-    $sage_error(__('You must be using PHP 7 or greater.', 'sage'), __('Invalid PHP version', 'sage'));
+if (version_compare('7.1', phpversion(), '>=')) {
+    $sage_error(__('You must be using PHP 7.1 or greater.', 'sage'), __('Invalid PHP version', 'sage'));
 }
 
 /**
@@ -90,3 +90,82 @@ Container::getInstance()
             'view' => require dirname(__DIR__).'/config/view.php',
         ]);
     }, true);
+
+// Create the affiliates custom post type
+function custom_post_type(){
+    // Set UI labels for CPT
+    $labels = array(
+        'name'              => _x('Affiliates', 'Post Type General Name', 'sage'),
+        'singular_name'     => _x('Affiliate', 'Post Type Singular Name', 'sage'),
+        'menu_name'         => _x('Affiliates', 'sage'),
+        'parent_item_colon' => _x('Parent Affiliate', 'sage'),
+        'all_items'         => _x('All Affiliates', 'sage'),
+        'view_item'         => _x('View Affiliate', 'sage'),
+        'add_new_item'      => _x('Add New Affiliate', 'sage'),
+        'add_new'           => _x('Add New', 'sage'),
+        'edit_item'         => _x('Edit Affiliate', 'sage'),
+        'update_item'       => _x('Update Affiliate', 'sage'),
+        'search_items'      => _x('Search Affiliates', 'sage'),
+        'not_found'         => _x('Not Found', 'sage'),
+        'not_found_in_trash'=> _x('Not Found in Trash', 'sage'),
+    );
+    
+    // Set other options for CPT
+    $args = array(
+        'label'             => _('affiliates'),
+        'description'       => _('Links to affiliate programs and partners'),
+        'labels'            => $labels,
+        'supports'          => array('title', 'editor', 'excerpt', 'thumbnail', 'custom-fields',),
+        'taxonomies'        => array('partners'),
+        'hierarchical'      => false,
+        'public'            => true,
+        'show_ui'           => true,
+        'show_in_menu'      => true,
+        'show_in_nav_menu'  => true,
+        'show_in_admin_bar' => true,
+        'menu_position'     => 5,
+        'can_export'        => true,
+        'has_archive'       => true,
+        'exclude_from_search'=> false,
+        'publicly_queryable'=> true,
+        'capability_type'   => 'page',
+    );
+    
+    // Register CPT
+    register_post_type('affiliates', $args);
+}
+
+// Hook into init
+add_action('init', 'custom_post_type', 0);
+// Rename the Excerpt meta box, using it for the affiliate URL
+function wpartisan_excerpt_label($translation, $original){
+    if('Excerpt' == $original){
+        return __('Affiliate Program URL');
+    } elseif(false !== strpos($original, 'Excerpts are optional hand-crafted summaries of your')){
+        return __('Use this field to enter the direct link that will navigate the consumer to the affiliate landing page');
+    }
+    return $translation;
+}
+add_filter('gettext', 'wpartisan_excerpt_label', 10, 2);
+
+// Display the custom post type
+function display_custom_post_type(){
+    $args = array(
+        'post_type'     => 'affiliates',
+        'post_status'   => 'publish'
+    );
+    
+    $string = '';
+    $query = new WP_Query($args);
+    if($query->have_posts()){
+        $string .= '<ul>';
+        while($query->have_posts()){
+            $query->the_post();
+            $string .= '<li>' . get_the_title() . '</li>';
+        }
+        $string .= '</ul>';
+    }
+    wp_reset_postdata();
+    return $string;
+}
+add_shortcode('affiliate', 'display_custom_post_type');
